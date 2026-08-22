@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Section {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String?
+  counter     Int          @default(0)
+  approved    Boolean      @default(false)
+  rules       Rule[]
+  tagSections TagSection[]
+
+  @@map("section")
+}
+
+model Rule {
+  id          Int       @id @default(autoincrement())
+  section_id  Int
+  section     Section   @relation(fields: [section_id], references: [id], onDelete: Restrict)
+  description String?
+  rule        String
+  checks      String?
+  counter     Int       @default(0)
+  approved    Boolean   @default(false)
+  tagRules    TagRule[]
+
+  @@map("rule")
+}
+
+model Tag {
+  id          Int          @id @default(autoincrement())
+  title       String
+  approved    Boolean      @default(false)
+  tagRules    TagRule[]
+  tagSections TagSection[]
+
+  @@map("tag")
+}
+
+model TagRule {
+  tag_id  Int
+  rule_id Int
+  tag     Tag  @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+  rule    Rule @relation(fields: [rule_id], references: [id], onDelete: Cascade)
+
+  @@id([tag_id, rule_id])
+  @@map("tag_rule")
+}
+
+model TagSection {
+  tag_id     Int
+  section_id Int
+  tag        Tag     @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+  section    Section @relation(fields: [section_id], references: [id], onDelete: Cascade)
+
+  @@id([tag_id, section_id])
+  @@map("tag_section")
+}
