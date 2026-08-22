@@ -252,6 +252,18 @@ select {
   margin-bottom: 10px;
 }
 
+.rule-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.rule-desc {
+  font-size: 0.88em;
+  color: var(--muted);
+}
+
 .float-bar {
   position: fixed;
   left: 50%;

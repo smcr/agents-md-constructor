@@ -38,7 +38,10 @@
           :checked="isRuleSelected(item.id)"
           @change="setRuleSelected(item.id, ($event.target as HTMLInputElement).checked)"
         />
-        <span>{{ item.rule }}</span>
+        <span class="rule-body">
+          <span class="rule-title">{{ item.rule }}</span>
+          <span v-if="ruleDescription(item)" class="rule-desc">{{ ruleDescription(item) }}</span>
+        </span>
       </label>
       <p v-if="selectedSectionId && visibleRules.length === 0" class="muted">
         Нет approved Rule
@@ -162,6 +165,10 @@ const ruleForm = reactive({
 
 function isApproved(value: unknown): boolean {
   return value === true || value === 1 || value === "true";
+}
+
+function ruleDescription(item: Rule): string {
+  return (item.description ?? "").trim();
 }
 
 function hasAllSelectedTags(tagIds: number[] | undefined): boolean {
