@@ -2,17 +2,23 @@ import express, { type NextFunction, type Request, type Response } from "express
 import fs from "node:fs";
 import path from "node:path";
 import { HttpError } from "./http.js";
+import { authRouter } from "./routes/auth.js";
 import { rulesRouter } from "./routes/rules.js";
 import { sectionsRouter } from "./routes/sections.js";
 import { tagsRouter } from "./routes/tags.js";
+import { usersRouter } from "./routes/users.js";
+import { sessionMiddleware } from "./session.js";
 
 const app = express();
 app.use(express.json());
+app.use(sessionMiddleware);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
+app.use("/api/auth", authRouter);
+app.use("/api/users", usersRouter);
 app.use("/api/sections", sectionsRouter);
 app.use("/api/rules", rulesRouter);
 app.use("/api/tags", tagsRouter);

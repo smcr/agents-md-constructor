@@ -62,3 +62,12 @@ model TagSection {
   @@id([tag_id, section_id])
   @@map("tag_section")
 }
+
+model User {
+  id            Int    @id @default(autoincrement())
+  login         String @unique
+  password_hash String
+  name          String
+
+  @@map("user")
+}

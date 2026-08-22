@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireAuthForWrites } from "../auth.js";
 import { prisma } from "../db.js";
 import {
   asyncHandler,
@@ -11,6 +12,8 @@ import {
 import { sectionInclude, sectionJson } from "../serialize.js";
 
 export const sectionsRouter = Router();
+
+sectionsRouter.use(requireAuthForWrites());
 
 sectionsRouter.get(
   "/",

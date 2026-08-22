@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { Router } from "express";
+import { requireAuthForWrites } from "../auth.js";
 import { prisma } from "../db.js";
 import {
   asyncHandler,
@@ -13,6 +14,10 @@ import {
 import { ruleInclude, ruleJson } from "../serialize.js";
 
 export const rulesRouter = Router();
+
+rulesRouter.use(
+  requireAuthForWrites((req) => req.method === "POST" && /^\/\d+\/counter\/?$/.test(req.path)),
+);
 
 rulesRouter.get(
   "/",
@@ -90,6 +95,26 @@ rulesRouter.get(
       throw new HttpError(404, "Rule not found");
     }
     res.json(ruleJson(row));
+  }),
+);
+
+rulesRouter.post(
+  "/:id/counter",
+  asyncHandler(async (req, res) => {
+    const id = parseId(req.params.id);
+    try {
+      const row = await prisma.rule.update({
+        where: { id },
+        data: { counter: { increment: 1 } },
+        include: ruleInclude,
+      });
+      res.json(ruleJson(row));
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") {
+        throw new HttpError(404, "Rule not found");
+      }
+      throw err;
+    }
   }),
 );
 

@@ -32,7 +32,7 @@ restart-frontend:
 
 migrate:
 	docker compose up -d db
-	docker compose run --rm --no-deps backend sh -c "npm install && npx prisma migrate deploy && npx prisma generate"
+	docker compose run --rm --no-deps backend sh -c "npm install && npx prisma migrate deploy && npx prisma generate && npx prisma db seed"
 
 logs:
 	docker compose logs -f

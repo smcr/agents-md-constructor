@@ -44,7 +44,7 @@
         Нет approved Rule
       </p>
     </section>
-    <button class="primary float-show" type="button" @click="showPreview = true">Показать</button>
+    <button class="primary float-show" type="button" @click="openPreview">Показать</button>
     <div v-if="showPreview" class="popup-backdrop" @click.self="showPreview = false">
       <div class="popup">
         <div class="row">
@@ -148,6 +148,32 @@ async function load() {
 
 function selectSection(id: number) {
   selectedSectionId.value = id;
+}
+
+async function openPreview() {
+  error.value = "";
+  const ids = [...selectedRuleIds.value];
+  if (ids.length > 0) {
+    const results = await Promise.allSettled(ids.map((id) => api.rules.increment(id)));
+    const failures: string[] = [];
+    for (const result of results) {
+      if (result.status === "fulfilled") {
+        const updated = result.value;
+        const index = rules.value.findIndex((item) => item.id === updated.id);
+        if (index >= 0) {
+          rules.value[index] = updated;
+        } else {
+          rules.value.push(updated);
+        }
+      } else {
+        failures.push(result.reason instanceof Error ? result.reason.message : String(result.reason));
+      }
+    }
+    if (failures.length > 0) {
+      error.value = failures.join("; ");
+    }
+  }
+  showPreview.value = true;
 }
 
 watch(visibleSections, syncSelectedSection);

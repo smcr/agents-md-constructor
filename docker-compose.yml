@@ -25,6 +25,7 @@ services:
     environment:
       DATABASE_URL: postgresql://agents:agents@db:5432/agents
       PORT: "3000"
+      SESSION_SECRET: local-dev-session-secret
     ports:
       - "3000:3000"
     depends_on:

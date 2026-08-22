@@ -11,6 +11,7 @@ make migrate
 
 - UI: http://localhost:5173
 - API: http://localhost:3000/api/health
+- Default login after migrate/seed: `admin` / `admin` (change it in Справочники → Users)
 
 After changing code, if the UI looks stale or throws in the console:
 
@@ -35,7 +36,8 @@ Run against an external PostgreSQL:
 ```bash
 docker run --rm -p 8080:8080 \
   -e DATABASE_URL=postgresql://agents:agents@host.docker.internal:5432/agents \
+  -e SESSION_SECRET=replace-with-a-long-random-string \
   agents-md-creator:latest
 ```
 
-Kubernetes manifests are in `k8s/`. Create the `agents-md-creator` secret with `DATABASE_URL` (see `k8s/secret.example.yaml`), then apply Deployment and Service.
+Kubernetes manifests are in `k8s/`. Create the `agents-md-creator` secret with `DATABASE_URL` and `SESSION_SECRET` (see `k8s/secret.example.yaml`), then apply Deployment and Service.

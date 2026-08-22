@@ -1,6 +1,6 @@
 import type { Rule, Section } from "./api";
 
-function isNonEmptyChecks(value: string | null | undefined): value is string {
+function isNonEmptyText(value: string | null | undefined): value is string {
   return Boolean(value && value.trim());
 }
 
@@ -14,6 +14,7 @@ export function assemblePreview(
   }
   const selected = new Set(selectedIds);
   const blocks: string[] = [];
+  const checks: string[] = [];
   for (const section of sections) {
     const sectionRules = rules.filter(
       (rule) => rule.section_id === section.id && selected.has(rule.id),
@@ -21,24 +22,28 @@ export function assemblePreview(
     if (sectionRules.length === 0) {
       continue;
     }
-    const lines: string[] = [`## ${section.title}`, ""];
-    if (section.description) {
-      lines.push(section.description, "");
+    const lines: string[] = [`## ${section.title}`];
+    if (isNonEmptyText(section.description)) {
+      lines.push(section.description.trim());
     }
-    for (const rule of sectionRules) {
-      lines.push(rule.rule, "");
-      if (rule.description) {
-        lines.push(rule.description, "");
+    lines.push("");
+    sectionRules.forEach((rule, index) => {
+      if (index > 0) {
+        lines.push("");
       }
-    }
-    const checks = sectionRules
-      .map((rule) => rule.checks)
-      .filter(isNonEmptyChecks)
-      .map((value) => value.trim());
-    if (checks.length > 0) {
-      lines.push("Checks:", checks.join("\n\n"), "");
-    }
+      lines.push(` - ${rule.rule}`);
+      if (isNonEmptyText(rule.description)) {
+        lines.push(rule.description.trim());
+      }
+      if (isNonEmptyText(rule.checks)) {
+        checks.push(rule.checks.trim());
+      }
+    });
     blocks.push(lines.join("\n").trimEnd());
   }
-  return blocks.join("\n\n");
+  let text = blocks.join("\n\n\n");
+  if (checks.length > 0) {
+    text += `\n\n\n## Чек-лист для проверки\n${checks.join("\n")}`;
+  }
+  return text;
 }

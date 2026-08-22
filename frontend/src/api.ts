@@ -1,3 +1,9 @@
+export type User = {
+  id: number;
+  login: string;
+  name: string;
+};
+
 export type Tag = {
   id: number;
   title: string;
@@ -27,6 +33,7 @@ export type Rule = {
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     ...options,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(options?.headers ?? {}),
@@ -43,6 +50,20 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  auth: {
+    me: () => request<User>("/api/auth/me"),
+    login: (data: { login: string; password: string }) =>
+      request<User>("/api/auth/login", { method: "POST", body: JSON.stringify(data) }),
+    logout: () => request<void>("/api/auth/logout", { method: "POST" }),
+  },
+  users: {
+    list: () => request<User[]>("/api/users"),
+    create: (data: { login: string; password: string; name: string }) =>
+      request<User>("/api/users", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: number, data: { login?: string; password?: string; name?: string }) =>
+      request<User>(`/api/users/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    remove: (id: number) => request<void>(`/api/users/${id}`, { method: "DELETE" }),
+  },
   sections: {
     list: () => request<Section[]>("/api/sections"),
     create: (data: Partial<Section>) =>
@@ -67,6 +88,8 @@ export const api = {
       request<Rule>("/api/rules", { method: "POST", body: JSON.stringify(data) }),
     update: (id: number, data: Partial<Rule>) =>
       request<Rule>(`/api/rules/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    increment: (id: number) =>
+      request<Rule>(`/api/rules/${id}/counter`, { method: "POST" }),
     remove: (id: number) => request<void>(`/api/rules/${id}`, { method: "DELETE" }),
     attachTag: (id: number, tagId: number) =>
       request<Rule>(`/api/rules/${id}/tags/${tagId}`, { method: "PUT" }),

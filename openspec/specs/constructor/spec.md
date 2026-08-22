@@ -106,11 +106,11 @@ The Конструктор page SHALL show a floating button labeled **Пока�
 Clicking **Показать** SHALL open a popup that covers 80% of the viewport. The popup MUST contain a textarea occupying 90% of the popup. The textarea MUST contain the assembled preview text built as follows:
 
 1. Consider only Rules that are currently checked (including checked Rules hidden by the Tag filter).
-2. For each Section that has at least one checked Rule, include that Section's `description` (omit empty descriptions).
-3. Include every checked Rule for that Section, grouped under the Section, using the Rule `rule` text and Rule `description` when present.
-4. After that Section's selected Rules, emit a single `Checks:` block that concatenates the non-empty `checks` of those Rules in the same order as the Rules, separated by a blank line. If none of those Rules have non-empty `checks`, the `Checks:` heading and block MUST be omitted for that Section.
+2. For each Section that has at least one checked Rule, emit the Section `title` and then that Section's `description` when the description is non-empty after trim. There MUST be no blank line between the Section title and its description. There MUST be exactly one blank line before the first Rule: after the Section description when it is present, or after the Section title when the description is empty or whitespace-only. Omit the description line when it is empty or whitespace-only.
+3. Include every checked Rule for that Section, grouped under the Section. Each Rule title is the Rule `rule` text prefixed with ` - `. When the Rule `description` is non-empty after trim, emit it on the next line with no blank line between the Rule title and its description. Omit the description line when it is empty. Consecutive Rules MUST be separated by exactly one blank line.
+4. After all Section/Rule blocks, emit one shared checklist for the whole preview: a single heading line `## Чек-лист для проверки`, then concatenate the non-empty `checks` of all selected Rules in Section order then Rule order, with no blank lines between checks. Separate this block from the last Rule (or that Rule's description) by exactly two blank lines. If none of the selected Rules have non-empty `checks`, omit the heading, the block, and those trailing blank lines. The preview MUST NOT contain the text `Checks:` and MUST NOT repeat the checklist per Section.
 
-Sections in the preview MUST appear in a stable order (the same order as the left-pane Section list when no Tag filter is applied, typically `id` ascending). If no Rules are checked, the textarea MUST be empty.
+Consecutive Sections in the preview MUST be separated by exactly two blank lines. The first Section MUST NOT be preceded by blank lines. Sections MUST appear in a stable order (the same order as the left-pane Section list when no Tag filter is applied, typically `id` ascending). If no Rules are checked, the textarea MUST be empty.
 
 #### Scenario: Open popup
 - **WHEN** the user clicks Показать
@@ -128,10 +128,59 @@ Sections in the preview MUST appear in a stable order (the same order as the lef
 - **WHEN** the user clicks Показать with no Rules checked
 - **THEN** the textarea is empty
 
-#### Scenario: One Checks block per Section
-- **WHEN** the user has checked two Rules in the same Section, both with non-empty `checks`, and clicks Показать
-- **THEN** that Section's preview contains exactly one `Checks:` heading whose body includes both Rules' `checks` text
+#### Scenario: One shared checklist for all Sections
+- **WHEN** the user has checked Rules in two Sections, each with non-empty `checks`, and clicks Показать
+- **THEN** the preview contains exactly one line `## Чек-лист для проверки` after the last Rule, that line is separated from the last Rule by exactly two blank lines, and the following lines include every selected Rule's `checks` text with no blank line between those checks
 
-#### Scenario: Omit Checks heading when empty
-- **WHEN** the user has checked Rules in a Section and none of those Rules have non-empty `checks`
-- **THEN** that Section's preview does not contain the text `Checks:`
+#### Scenario: Omit checklist heading when empty
+- **WHEN** the user has checked Rules and none of those Rules have non-empty `checks`
+- **THEN** the preview does not contain `## Чек-лист для проверки` and does not contain `Checks:`
+
+#### Scenario: Title and description have no blank line
+- **WHEN** a Section and a Rule both have non-empty descriptions and the user clicks Показать
+- **THEN** the Section title is immediately followed by the Section description, and each Rule title is immediately followed by that Rule's description, with no blank line in either pair
+
+#### Scenario: One blank line after Section description
+- **WHEN** a Section has a non-empty description and at least one checked Rule
+- **THEN** there is exactly one blank line between that description and the first Rule
+
+#### Scenario: One blank line after Section title when description is empty
+- **WHEN** a Section has an empty or whitespace-only description and at least one checked Rule
+- **THEN** there is exactly one blank line between the Section title and the first Rule, and no description line is emitted
+
+#### Scenario: Omit empty descriptions
+- **WHEN** a Section or Rule has an empty or whitespace-only description
+- **THEN** the preview does not emit a description line for that item
+
+#### Scenario: Rules are prefixed and separated
+- **WHEN** the user has checked two Rules in the same Section and clicks Показать
+- **THEN** each Rule `rule` text is prefixed with ` - ` and the two Rules are separated by exactly one blank line
+
+#### Scenario: Two blank lines between Sections
+- **WHEN** the user has checked Rules in two Sections and clicks Показать
+- **THEN** the two Section blocks are separated by exactly two blank lines and the first Section has no leading blank lines
+
+### Requirement: Показать increments selected Rule counters
+Clicking **Показать** SHALL persist a `counter` increment of 1 for every Rule that is currently checked, including checked Rules hidden by the Tag filter. The increment MUST happen in addition to opening the preview popup. Each click MUST increment once per checked Rule. Unchecked Rules MUST NOT be incremented. `Section.counter` MUST NOT change.
+
+If no Rules are checked, the system MUST NOT change any Rule `counter` values. If some increments fail, the popup MUST still open and the constructor MUST show an error; successful increments MUST remain persisted.
+
+#### Scenario: Increment checked Rules
+- **WHEN** the user has checked two Rules and clicks Показать
+- **THEN** each of those Rules has `counter` increased by 1 in persistent storage and the preview popup opens
+
+#### Scenario: Hidden checked Rules are incremented
+- **WHEN** a checked Rule is hidden by the Tag filter and the user clicks Показать
+- **THEN** that Rule's `counter` is still increased by 1
+
+#### Scenario: No selections
+- **WHEN** the user clicks Показать with no Rules checked
+- **THEN** no Rule `counter` values change
+
+#### Scenario: Repeat click increments again
+- **WHEN** the user clicks Показать twice with the same Rules still checked
+- **THEN** each of those Rules has `counter` increased by 2 compared to before the first click
+
+#### Scenario: Increment failure still opens preview
+- **WHEN** incrementing at least one checked Rule fails and the user clicked Показать
+- **THEN** the preview popup still opens and the constructor shows an error

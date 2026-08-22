@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireAuthForWrites } from "../auth.js";
 import { prisma } from "../db.js";
 import {
   asyncHandler,
@@ -9,6 +10,8 @@ import {
 import { tagJson } from "../serialize.js";
 
 export const tagsRouter = Router();
+
+tagsRouter.use(requireAuthForWrites());
 
 tagsRouter.get(
   "/",

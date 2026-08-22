@@ -1,4 +1,4 @@
-import type { Rule, Section, Tag } from "@prisma/client";
+import type { Rule, Section, Tag, User } from "@prisma/client";
 
 type SectionWithTags = Section & { tagSections: { tag_id: number }[] };
 type RuleWithTags = Rule & { tagRules: { tag_id: number }[] };
@@ -32,6 +32,14 @@ export function tagJson(tag: Tag) {
     id: tag.id,
     title: tag.title,
     approved: tag.approved,
+  };
+}
+
+export function userJson(user: User) {
+  return {
+    id: user.id,
+    login: user.login,
+    name: user.name,
   };
 }
 

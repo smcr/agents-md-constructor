@@ -23,4 +23,4 @@ WORKDIR /app/backend
 ENV PORT=8080
 ENV FRONTEND_DIST=/app/frontend/dist
 EXPOSE 8080
-CMD ["sh", "-c", "npx prisma migrate deploy && npx tsx src/index.ts"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && npx tsx src/index.ts"]

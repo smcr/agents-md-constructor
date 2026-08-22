@@ -26,6 +26,11 @@ spec:
                 secretKeyRef:
                   name: agents-md-creator
                   key: DATABASE_URL
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: agents-md-creator
+                  key: SESSION_SECRET
           readinessProbe:
             httpGet:
               path: /api/health
