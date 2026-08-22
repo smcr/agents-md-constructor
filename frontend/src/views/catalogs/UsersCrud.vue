@@ -118,6 +118,9 @@ async function save() {
 }
 
 async function remove(id: number) {
+  if (!confirm("Удалить эту запись?")) {
+    return;
+  }
   error.value = "";
   try {
     await api.users.remove(id);

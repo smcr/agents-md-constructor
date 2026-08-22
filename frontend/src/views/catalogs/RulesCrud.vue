@@ -162,6 +162,9 @@ async function toggleTag(tagId: number, checked: boolean) {
 }
 
 async function remove(id: number) {
+  if (!confirm("Удалить эту запись?")) {
+    return;
+  }
   error.value = "";
   try {
     await api.rules.remove(id);
