@@ -8,12 +8,15 @@ import {
   optionalInt,
   optionalString,
   parseId,
+  parseTagIds,
 } from "../http.js";
 import { sectionInclude, sectionJson } from "../serialize.js";
 
 export const sectionsRouter = Router();
 
-sectionsRouter.use(requireAuthForWrites());
+sectionsRouter.use(
+  requireAuthForWrites((req) => req.method === "POST" && /^\/propose\/?$/.test(req.path)),
+);
 
 sectionsRouter.get(
   "/",
@@ -23,6 +26,34 @@ sectionsRouter.get(
       orderBy: { id: "asc" },
     });
     res.json(rows.map(sectionJson));
+  }),
+);
+
+sectionsRouter.post(
+  "/propose",
+  asyncHandler(async (req, res) => {
+    const title = String(req.body?.title ?? "").trim();
+    if (!title) {
+      throw new HttpError(400, "title is required");
+    }
+    const tagIds = parseTagIds(req.body?.tag_ids);
+    if (tagIds.length > 0) {
+      const found = await prisma.tag.count({ where: { id: { in: tagIds } } });
+      if (found !== tagIds.length) {
+        throw new HttpError(400, "Tag not found");
+      }
+    }
+    const row = await prisma.section.create({
+      data: {
+        title,
+        description: optionalString(req.body?.description) ?? null,
+        counter: 0,
+        approved: false,
+        tagSections: { create: tagIds.map((tag_id) => ({ tag_id })) },
+      },
+      include: sectionInclude,
+    });
+    res.status(201).json(sectionJson(row));
   }),
 );
 

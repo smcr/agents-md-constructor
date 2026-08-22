@@ -50,6 +50,23 @@ export function optionalBool(value: unknown): boolean | undefined {
   throw new HttpError(400, "Invalid boolean");
 }
 
+export function parseTagIds(value: unknown): number[] {
+  if (value === undefined || value === null || value === "") {
+    return [];
+  }
+  if (!Array.isArray(value)) {
+    throw new HttpError(400, "tag_ids must be an array");
+  }
+  const ids = value.map((item) => {
+    const id = Number(item);
+    if (!Number.isInteger(id) || id <= 0) {
+      throw new HttpError(400, "Invalid tag id");
+    }
+    return id;
+  });
+  return [...new Set(ids)];
+}
+
 export function optionalInt(value: unknown, fallback?: number): number | undefined {
   if (value === undefined) {
     return fallback;

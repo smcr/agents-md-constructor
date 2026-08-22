@@ -7,15 +7,27 @@ Lets editors pick approved Rules across Sections and preview an assembled AGENTS
 ## Requirements
 
 ### Requirement: Top navigation between Справочники and Конструктор
-The frontend SHALL show a top menu with two buttons: **Справочники** and **Конструктор**. Each button MUST open the corresponding page.
+The frontend SHALL show a top menu with **Конструктор** for everyone, including guests. **Справочники** MUST appear in the top menu only when the visitor is authenticated and MUST be available only to authenticated users. Clicking **Конструктор** MUST open the constructor page. Clicking **Справочники** when authenticated MUST open the Справочники page. A guest MUST NOT see the Справочники button. If a guest opens or is sent to Справочники, the catalog MUST NOT be shown and the visitor MUST be prompted to sign in (authorization popup).
 
 #### Scenario: Open Конструктор from the top menu
 - **WHEN** the user clicks Конструктор
 - **THEN** the Конструктор page is shown
 
+#### Scenario: Open Конструктор as a guest
+- **WHEN** a guest clicks Конструктор
+- **THEN** the Конструктор page is shown without requiring login
+
 #### Scenario: Open Справочники from the top menu
-- **WHEN** the user clicks Справочники
+- **WHEN** an authenticated user clicks Справочники
 - **THEN** the Справочники page is shown
+
+#### Scenario: Guest does not see Справочники
+- **WHEN** the visitor is not authenticated
+- **THEN** the top menu does not show Справочники
+
+#### Scenario: Guest clicks Справочники
+- **WHEN** a guest clicks Справочники
+- **THEN** the Справочники CRUD workspace is not shown and the authorization popup is opened
 
 ### Requirement: Constructor Tag filter
 The Конструктор page SHALL show, at the top of the main (right) pane, a multi-select list of Tags whose `approved` is true. Unapproved Tags MUST NOT appear. The user MAY select zero, one, or several Tags. Selecting Tags MUST NOT write to the database.
@@ -101,6 +113,39 @@ The Конструктор page SHALL show a floating button labeled **Пока�
 #### Scenario: Button is visible on Конструктор
 - **WHEN** the user is on the Конструктор page
 - **THEN** a floating Показать button is visible 50px from the bottom
+
+### Requirement: Propose menu next to Показать
+The Конструктор page SHALL show a **+** button next to the floating **Показать** button. Clicking **+** MUST reveal two actions: **предложить раздел** and **предложить правило**. These actions MUST be available without login.
+
+#### Scenario: Reveal propose actions
+- **WHEN** the user clicks +
+- **THEN** the buttons предложить раздел and предложить правило are shown
+
+#### Scenario: Guest can open the propose menu
+- **WHEN** a guest is on Конструктор and clicks +
+- **THEN** the propose actions are shown without requiring login
+
+### Requirement: Propose Section form
+Clicking **предложить раздел** SHALL open a popup form with `title`, `description`, and a multi-select of Tags whose `approved` is true. Saving MUST create a proposed Section with the selected Tags and close the popup. `title` MUST be required.
+
+#### Scenario: Save a Section proposal
+- **WHEN** the user fills title (and optionally description and Tags) and clicks Сохранить
+- **THEN** a Section is stored with the selected Tags and the popup closes
+
+#### Scenario: Cancel or close without saving
+- **WHEN** the user closes the Section proposal popup without saving
+- **THEN** no Section is created
+
+### Requirement: Propose Rule form
+Clicking **предложить правило** SHALL open a popup form with `section_id`, `rule`, `checks`, `description`, and a multi-select of Tags whose `approved` is true. The `section_id` field MUST be a dropdown of Sections whose `approved` is true. Saving MUST create a proposed Rule with the selected Tags and close the popup. `section_id` and `rule` MUST be required.
+
+#### Scenario: Dropdown lists only approved Sections
+- **WHEN** the user opens the Rule proposal form
+- **THEN** the section_id dropdown contains only Sections with `approved` true
+
+#### Scenario: Save a Rule proposal
+- **WHEN** the user chooses an approved Section, fills rule (and optionally checks, description, and Tags), and clicks Сохранить
+- **THEN** a Rule is stored with the selected Tags and the popup closes
 
 ### Requirement: Preview popup with assembled AGENTS.md
 Clicking **Показать** SHALL open a popup that covers 80% of the viewport. The popup MUST contain a textarea occupying 90% of the popup. The textarea MUST contain the assembled preview text built as follows:

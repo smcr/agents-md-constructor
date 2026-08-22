@@ -252,13 +252,48 @@ select {
   margin-bottom: 10px;
 }
 
-.float-show {
+.float-bar {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
   bottom: 50px;
   z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.float-show {
   min-width: 160px;
+}
+
+.propose-wrap {
+  position: relative;
+}
+
+.propose-plus {
+  min-width: 48px;
+}
+
+.propose-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 220px;
+}
+
+.form-popup {
+  width: min(520px, 90vw);
+  height: auto;
+}
+
+.form-popup textarea {
+  width: 100%;
+  height: auto;
+  margin: 0;
 }
 
 .popup-backdrop {

@@ -10,13 +10,18 @@ import {
   optionalQueryId,
   optionalString,
   parseId,
+  parseTagIds,
 } from "../http.js";
 import { ruleInclude, ruleJson } from "../serialize.js";
 
 export const rulesRouter = Router();
 
 rulesRouter.use(
-  requireAuthForWrites((req) => req.method === "POST" && /^\/\d+\/counter\/?$/.test(req.path)),
+  requireAuthForWrites(
+    (req) =>
+      req.method === "POST" &&
+      (/^\/\d+\/counter\/?$/.test(req.path) || /^\/propose\/?$/.test(req.path)),
+  ),
 );
 
 rulesRouter.get(
@@ -37,6 +42,47 @@ rulesRouter.get(
       orderBy: { id: "asc" },
     });
     res.json(rows.map(ruleJson));
+  }),
+);
+
+rulesRouter.post(
+  "/propose",
+  asyncHandler(async (req, res) => {
+    const sectionId = optionalInt(req.body?.section_id);
+    if (sectionId === undefined) {
+      throw new HttpError(400, "section_id is required");
+    }
+    const ruleText = String(req.body?.rule ?? "").trim();
+    if (!ruleText) {
+      throw new HttpError(400, "rule is required");
+    }
+    const checksRaw = optionalString(req.body?.checks);
+    const checks =
+      checksRaw === undefined || checksRaw === null ? null : checksRaw.trim() || null;
+    const section = await prisma.section.findUnique({ where: { id: sectionId } });
+    if (!section) {
+      throw new HttpError(400, "Section not found");
+    }
+    const tagIds = parseTagIds(req.body?.tag_ids);
+    if (tagIds.length > 0) {
+      const found = await prisma.tag.count({ where: { id: { in: tagIds } } });
+      if (found !== tagIds.length) {
+        throw new HttpError(400, "Tag not found");
+      }
+    }
+    const row = await prisma.rule.create({
+      data: {
+        section_id: sectionId,
+        description: optionalString(req.body?.description) ?? null,
+        rule: ruleText,
+        checks,
+        counter: 0,
+        approved: false,
+        tagRules: { create: tagIds.map((tag_id) => ({ tag_id })) },
+      },
+      include: ruleInclude,
+    });
+    res.status(201).json(ruleJson(row));
   }),
 );
 

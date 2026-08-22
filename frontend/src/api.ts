@@ -68,6 +68,8 @@ export const api = {
     list: () => request<Section[]>("/api/sections"),
     create: (data: Partial<Section>) =>
       request<Section>("/api/sections", { method: "POST", body: JSON.stringify(data) }),
+    propose: (data: { title: string; description?: string | null; tag_ids?: number[] }) =>
+      request<Section>("/api/sections/propose", { method: "POST", body: JSON.stringify(data) }),
     update: (id: number, data: Partial<Section>) =>
       request<Section>(`/api/sections/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     remove: (id: number) => request<void>(`/api/sections/${id}`, { method: "DELETE" }),
@@ -86,6 +88,13 @@ export const api = {
     },
     create: (data: Partial<Rule> & { section_id: number; rule: string }) =>
       request<Rule>("/api/rules", { method: "POST", body: JSON.stringify(data) }),
+    propose: (data: {
+      section_id: number;
+      rule: string;
+      checks?: string | null;
+      description?: string | null;
+      tag_ids?: number[];
+    }) => request<Rule>("/api/rules/propose", { method: "POST", body: JSON.stringify(data) }),
     update: (id: number, data: Partial<Rule>) =>
       request<Rule>(`/api/rules/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     increment: (id: number) =>
