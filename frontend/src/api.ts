@@ -99,6 +99,14 @@ export const api = {
       request<Rule>(`/api/rules/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     increment: (id: number) =>
       request<Rule>(`/api/rules/${id}/counter`, { method: "POST" }),
+    popular: (tagIds?: number[]) => {
+      const query = new URLSearchParams();
+      for (const id of tagIds ?? []) {
+        query.append("tag_id", String(id));
+      }
+      const suffix = query.toString() ? `?${query}` : "";
+      return request<Rule[]>(`/api/rules/popular${suffix}`);
+    },
     remove: (id: number) => request<void>(`/api/rules/${id}`, { method: "DELETE" }),
     attachTag: (id: number, tagId: number) =>
       request<Rule>(`/api/rules/${id}/tags/${tagId}`, { method: "PUT" }),

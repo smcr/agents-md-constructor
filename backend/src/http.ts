@@ -30,6 +30,23 @@ export function optionalQueryId(value: unknown): number | undefined {
   return id;
 }
 
+export function optionalQueryIds(value: unknown): number[] {
+  if (value === undefined || value === null || value === "") {
+    return [];
+  }
+  const raw = Array.isArray(value) ? value : [value];
+  const ids = raw
+    .filter((item) => item !== undefined && item !== null && item !== "")
+    .map((item) => {
+      const id = Number(item);
+      if (!Number.isInteger(id) || id <= 0) {
+        throw new HttpError(400, "Invalid id");
+      }
+      return id;
+    });
+  return [...new Set(ids)];
+}
+
 export function optionalString(value: unknown): string | null | undefined {
   if (value === undefined) {
     return undefined;

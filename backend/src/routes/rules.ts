@@ -8,6 +8,7 @@ import {
   optionalBool,
   optionalInt,
   optionalQueryId,
+  optionalQueryIds,
   optionalString,
   parseId,
   parseTagIds,
@@ -36,6 +37,41 @@ rulesRouter.get(
     if (tagId !== undefined) {
       where.tagRules = { some: { tag_id: tagId } };
     }
+    const rows = await prisma.rule.findMany({
+      where,
+      include: ruleInclude,
+      orderBy: { id: "asc" },
+    });
+    res.json(rows.map(ruleJson));
+  }),
+);
+
+rulesRouter.get(
+  "/popular",
+  asyncHandler(async (req, res) => {
+    const tagIds = optionalQueryIds(req.query.tag_id);
+    const avg = await prisma.rule.aggregate({
+      _avg: { counter: true },
+      where: { approved: true },
+    });
+    const mean = avg._avg.counter;
+    if (mean === null) {
+      res.json([]);
+      return;
+    }
+    const where: Prisma.RuleWhereInput = {
+      approved: true,
+      counter: { gt: mean },
+      section: {
+        approved: true,
+        ...(tagIds.length > 0
+          ? { AND: tagIds.map((tag_id) => ({ tagSections: { some: { tag_id } } })) }
+          : {}),
+      },
+      ...(tagIds.length > 0
+        ? { AND: tagIds.map((tag_id) => ({ tagRules: { some: { tag_id } } })) }
+        : {}),
+    };
     const rows = await prisma.rule.findMany({
       where,
       include: ruleInclude,

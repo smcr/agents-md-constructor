@@ -49,6 +49,9 @@
     </section>
     <div class="float-bar">
       <button class="primary float-show" type="button" @click="openPreview">Показать</button>
+      <button class="primary float-show" type="button" @click="openPopularPreview">
+        Часто выбирают
+      </button>
       <div class="propose-wrap">
         <button class="primary propose-plus" type="button" @click="proposeMenuOpen = !proposeMenuOpen">
           +
@@ -59,13 +62,13 @@
         </div>
       </div>
     </div>
-    <div v-if="showPreview" class="popup-backdrop" @click.self="showPreview = false">
+    <div v-if="showPreview" class="popup-backdrop" @click.self="closePreview">
       <div class="popup">
         <div class="row">
           <strong>AGENTS.md</strong>
-          <button class="ghost" type="button" @click="showPreview = false">Закрыть</button>
+          <button class="ghost" type="button" @click="closePreview">Закрыть</button>
         </div>
-        <textarea :value="previewText" readonly />
+        <textarea :value="displayedPreviewText" readonly />
       </div>
     </div>
     <div v-if="showSectionPropose" class="popup-backdrop" @click.self="closeSectionPropose">
@@ -149,6 +152,7 @@ const rules = ref<Rule[]>([]);
 const tags = ref<Tag[]>([]);
 const selectedSectionId = ref<number | null>(null);
 const showPreview = ref(false);
+const previewOverride = ref<string | null>(null);
 const proposeMenuOpen = ref(false);
 const showSectionPropose = ref(false);
 const showRulePropose = ref(false);
@@ -212,6 +216,8 @@ const previewText = computed(() =>
   assemblePreview(allApprovedSections.value, rules.value, selectedRuleIds.value),
 );
 
+const displayedPreviewText = computed(() => previewOverride.value ?? previewText.value);
+
 function syncSelectedSection() {
   if (visibleSections.value.some((section) => section.id === selectedSectionId.value)) {
     return;
@@ -240,8 +246,14 @@ function selectSection(id: number) {
   selectedSectionId.value = id;
 }
 
+function closePreview() {
+  showPreview.value = false;
+  previewOverride.value = null;
+}
+
 async function openPreview() {
   error.value = "";
+  previewOverride.value = null;
   const ids = [...selectedRuleIds.value];
   if (ids.length > 0) {
     const results = await Promise.allSettled(ids.map((id) => api.rules.increment(id)));
@@ -264,6 +276,22 @@ async function openPreview() {
     }
   }
   showPreview.value = true;
+}
+
+async function openPopularPreview() {
+  error.value = "";
+  try {
+    const popularRules = await api.rules.popular(selectedTagIds.value);
+    const rows = Array.isArray(popularRules) ? popularRules : [];
+    previewOverride.value = assemblePreview(
+      allApprovedSections.value,
+      rows,
+      rows.map((item) => item.id),
+    );
+    showPreview.value = true;
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : String(err);
+  }
 }
 
 function toggleProposeTag(tagIds: number[], tagId: number, checked: boolean) {
